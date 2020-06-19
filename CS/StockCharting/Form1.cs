@@ -1,9 +1,8 @@
-﻿#region #usings
+﻿using DevExpress.XtraCharts;
 using System;
+using System.Collections.Generic;
+using System.Drawing;
 using System.Windows.Forms;
-using DevExpress.XtraCharts;
-// ...
-#endregion #usings
 
 namespace StockCharting {
     public partial class Form1 : Form {
@@ -11,7 +10,6 @@ namespace StockCharting {
             InitializeComponent();
         }
 
-        #region #code
         private void Form1_Load(object sender, EventArgs e) {
             // Create a new chart.
             ChartControl stockChart = new ChartControl();
@@ -19,60 +17,45 @@ namespace StockCharting {
             // Create a stock series.
             Series series1 = new Series("Series 1", ViewType.Stock);
 
-            // Specify the date-time argument scale type for the series,
-            // as it is qualitative, by default.
-            series1.ArgumentScaleType = ScaleType.DateTime;
+            // Bind the series to data.
+            series1.DataSource = GetDataPoints();
+            series1.SetFinancialDataMembers("Argument", "Low", "High", "Open", "Close");
 
-            // Add points to it.
-            series1.Points.Add(new SeriesPoint(new DateTime(2017, 3, 1),
-                new object[] { 24.00, 25.00, 25.00, 24.875 }));
-            series1.Points.Add(new SeriesPoint(new DateTime(2017, 3, 2),
-                new object[] { 23.625, 25.125, 24.00, 24.875 }));
-            series1.Points.Add(new SeriesPoint(new DateTime(2017, 3, 3),
-                new object[] { 26.25, 28.25, 26.75, 27.00 }));
-            series1.Points.Add(new SeriesPoint(new DateTime(2017, 3, 6),
-                new object[] { 26.50, 27.875, 26.875, 27.25 }));
-            series1.Points.Add(new SeriesPoint(new DateTime(2017, 3, 7),
-                new object[] { 26.375, 27.50, 27.375, 26.75 }));
-            series1.Points.Add(new SeriesPoint(new DateTime(2017, 3, 8),
-                new object[] { 25.75, 26.875, 26.75, 26.00 }));
-            series1.Points.Add(new SeriesPoint(new DateTime(2017, 3, 9),
-                new object[] { 25.75, 26.75, 26.125, 26.25 }));
-            series1.Points.Add(new SeriesPoint(new DateTime(2017, 3, 10),
-                new object[] { 25.75, 26.375, 26.375, 25.875 }));
-            series1.Points.Add(new SeriesPoint(new DateTime(2017, 3, 13),
-                new object[] { 24.875, 26.125, 26.00, 25.375 }));
-            series1.Points.Add(new SeriesPoint(new DateTime(2017, 3, 14),
-                new object[] { 25.125, 26.00, 25.625, 25.75 }));
+            // Specify that date-time arguments are expected.
+            series1.ArgumentScaleType = ScaleType.DateTime;
 
             // Add the series to the chart.
             stockChart.Series.Add(series1);
 
-            // Access the view-type-specific options of the series.
-            StockSeriesView myView = (StockSeriesView)series1.View;
+            // Customize the series view settings.
+            StockSeriesView view = (StockSeriesView)series1.View;
 
-            myView.LineThickness = 2;
-            myView.LevelLineLength = 0.25;
+            view.LineThickness = 2;
+            view.LevelLineLength = 0.25;
 
             // Specify the series reduction options.
-            myView.ReductionOptions.ColorMode = ReductionColorMode.OpenToCloseValue;
-            myView.ReductionOptions.Level = StockLevel.Close;
-            myView.ReductionOptions.Visible = true;
+            view.ReductionOptions.ColorMode = ReductionColorMode.OpenToCloseValue;
+            view.ReductionOptions.Level = StockLevel.Close;
+            view.ReductionOptions.Visible = true;
+
+            // Set point colors.
+            view.Color = Color.Green;
+            view.ReductionOptions.Color = Color.Red;
 
             // Access the chart's diagram.
-            XYDiagram diagram = ((XYDiagram)stockChart.Diagram);
+            XYDiagram diagram = (XYDiagram)stockChart.Diagram;
 
-            // Access the type-specific options of the diagram.
-            diagram.AxisY.WholeRange.MinValue = 22;
-
-            // Exclude weekends from the X-axis range,
+            // Exclude empty ranges from the X-axis range
             // to avoid gaps in the chart's data.
-            diagram.AxisX.DateTimeScaleOptions.WorkdaysOnly = true;
+            diagram.AxisX.DateTimeScaleOptions.SkipRangesWithoutPoints = true;
 
-            // Hide the legend (if necessary).
+            // Hide the range without points at the beginning of the y-axis.
+            diagram.AxisY.WholeRange.AlwaysShowZeroLevel = false;
+
+            // Hide the legend.
             stockChart.Legend.Visibility = DevExpress.Utils.DefaultBoolean.False;
 
-            // Add a title to the chart (if necessary).
+            // Add a title to the chart.
             stockChart.Titles.Add(new ChartTitle());
             stockChart.Titles[0].Text = "Stock Chart";
 
@@ -80,7 +63,36 @@ namespace StockCharting {
             stockChart.Dock = DockStyle.Fill;
             this.Controls.Add(stockChart);
         }
-        #endregion #code
 
+        List<DataPoint> GetDataPoints() {
+            List<DataPoint> dataPoints = new List<DataPoint> {
+                new DataPoint(DateTime.Now.AddDays(-9), 24.00, 25.00, 25.00, 24.875),
+                new DataPoint(DateTime.Now.AddDays(-8), 23.625, 25.125, 24.00, 24.875),
+                new DataPoint(DateTime.Now.AddDays(-7), 26.25, 28.25, 26.75, 27.00),
+                new DataPoint(DateTime.Now.AddDays(-6), 26.50, 27.875, 26.875, 27.25),
+                
+                new DataPoint(DateTime.Now.AddDays(-4), 25.75, 26.875, 26.75, 26.00),
+                new DataPoint(DateTime.Now.AddDays(-3), 25.75, 26.75, 26.125, 26.25),
+                new DataPoint(DateTime.Now.AddDays(-2), 25.75, 26.375, 26.375, 25.875),
+                new DataPoint(DateTime.Now.AddDays(-1), 24.875, 26.125, 26.00, 25.375),
+                new DataPoint(DateTime.Now.AddDays(0), 25.125, 26.00, 25.625, 25.75),
+             };
+            return dataPoints;
+        }
+    }
+
+    public class DataPoint {
+        public DateTime Argument { get; set; }
+        public double Low { get; set; }
+        public double High { get; set; }
+        public double Open { get; set; }
+        public double Close { get; set; }
+        public DataPoint(DateTime arg, double low, double high, double open, double close) {
+            this.Argument = arg;
+            this.Low = low;
+            this.High = high;
+            this.Open = open;
+            this.Close = close;
+        }
     }
 }
